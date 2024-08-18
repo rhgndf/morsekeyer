@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morse Code Straight Key</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        input[type="number"] {
+            margin: 20px;
+            padding: 10px;
+            font-size: 1.2em;
+            width: 80px;
+            text-align: center;
+        }
+        button {
+            padding: 20px;
+            font-size: 1.5em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:active {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Morse Code Straight Key</h1>
+    <input id="frequency" type="number" value="440" min="100" max="10000" step="10">
+    <label for="frequency">Frequency (Hz)</label>
+    <button id="key">Press & Hold</button>
+
+    <script>
+        const button = document.getElementById('key');
+        const frequencyInput = document.getElementById('frequency');
+
+        let context = new (window.AudioContext || window.webkitAudioContext)();
+        let oscillator;
+
+        button.addEventListener('mousedown', () => {
+            oscillator = context.createOscillator();
+            oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
+            oscillator.connect(context.destination);
+            oscillator.start();
+        });
+
+        button.addEventListener('mouseup', () => {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+            }
+        });
+
+        button.addEventListener('mouseleave', () => {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+            }
+        });
+
+        // For touch devices
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            oscillator = context.createOscillator();
+            oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
+            oscillator.connect(context.destination);
+            oscillator.start();
+        });
+
+        button.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+            }
+        });
+    </script>
+
+</body>
+</html>
