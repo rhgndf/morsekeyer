@@ -39,7 +39,7 @@
     <h1>Morse Code Straight Key</h1>
     <input id="frequency" type="number" value="440" min="100" max="10000" step="10">
     <label for="frequency">Frequency (Hz)</label>
-    <button id="key">Press & Hold</button>
+    <button id="key">Press & Hold or Press Spacebar</button>
 
     <script>
         const button = document.getElementById('key');
@@ -47,42 +47,55 @@
 
         let context = new (window.AudioContext || window.webkitAudioContext)();
         let oscillator;
+        let isPlaying = false;
 
-        button.addEventListener('mousedown', () => {
-            oscillator = context.createOscillator();
-            oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
-            oscillator.connect(context.destination);
-            oscillator.start();
-        });
+        function startTone() {
+            if (!isPlaying) {
+                oscillator = context.createOscillator();
+                oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
+                oscillator.connect(context.destination);
+                oscillator.start();
+                isPlaying = true;
+            }
+        }
 
-        button.addEventListener('mouseup', () => {
-            if (oscillator) {
+        function stopTone() {
+            if (oscillator && isPlaying) {
                 oscillator.stop();
                 oscillator.disconnect();
+                isPlaying = false;
             }
-        });
+        }
 
-        button.addEventListener('mouseleave', () => {
-            if (oscillator) {
-                oscillator.stop();
-                oscillator.disconnect();
-            }
-        });
+        button.addEventListener('mousedown', startTone);
+        button.addEventListener('mouseup', stopTone);
+        button.addEventListener('mouseleave', stopTone);
 
         // For touch devices
         button.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            oscillator = context.createOscillator();
-            oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
-            oscillator.connect(context.destination);
-            oscillator.start();
+            startTone();
         });
 
         button.addEventListener('touchend', (e) => {
             e.preventDefault();
-            if (oscillator) {
-                oscillator.stop();
-                oscillator.disconnect();
+            stopTone();
+        });
+
+        // Handle spacebar press
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                startTone();
+                button.classList.add('active'); // Optional: visually indicate button press
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                stopTone();
+                button.classList.remove('active'); // Optional: visually indicate button release
             }
         });
     </script>
