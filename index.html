@@ -56,6 +56,13 @@
         let gainNode;
         let isPlaying = false;
 
+        async function resumeAudioContext() {
+            // Resume the audio context if it's suspended (iOS workaround)
+            if (context.state === 'suspended') {
+                await context.resume();
+            }
+        }
+
         function startTone() {
             if (!isPlaying) {
                 // Create an oscillator and a gain node for smooth volume control
@@ -91,7 +98,8 @@
             }
         }
 
-        button.addEventListener('mousedown', () => {
+        button.addEventListener('mousedown', async () => {
+            await resumeAudioContext();  // Ensure AudioContext is active (iOS fix)
             startTone();
             button.classList.add('active');  // Add the active class
         });
@@ -107,8 +115,9 @@
         });
 
         // For touch devices
-        button.addEventListener('touchstart', (e) => {
+        button.addEventListener('touchstart', async (e) => {
             e.preventDefault();
+            await resumeAudioContext();  // Ensure AudioContext is active (iOS fix)
             startTone();
             button.classList.add('active');  // Add the active class
         });
@@ -120,9 +129,10 @@
         });
 
         // Handle spacebar press
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', async (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
+                await resumeAudioContext();  // Ensure AudioContext is active (iOS fix)
                 startTone();
                 button.classList.add('active');  // Add the active class
             }
