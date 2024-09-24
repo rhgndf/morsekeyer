@@ -33,8 +33,9 @@
             border: none;
             cursor: pointer;
             border-radius: 0;
+            transition: background-color 0.2s ease;
         }
-        #key:active {
+        #key.active {
             background-color: #45a049;
         }
     </style>
@@ -52,13 +53,24 @@
 
         let context = new (window.AudioContext || window.webkitAudioContext)();
         let oscillator;
+        let gainNode;
         let isPlaying = false;
 
         function startTone() {
             if (!isPlaying) {
+                // Create an oscillator and a gain node for smooth volume control
                 oscillator = context.createOscillator();
+                gainNode = context.createGain();
+
+                // Set frequency and connect oscillator to gain node
                 oscillator.frequency.setValueAtTime(frequencyInput.value, context.currentTime);
-                oscillator.connect(context.destination);
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+
+                // Smooth fade-in
+                gainNode.gain.setValueAtTime(0, context.currentTime);
+                gainNode.gain.linearRampToValueAtTime(1, context.currentTime + 0.01); // Short fade-in
+
                 oscillator.start();
                 isPlaying = true;
             }
@@ -66,25 +78,45 @@
 
         function stopTone() {
             if (oscillator && isPlaying) {
-                oscillator.stop();
-                oscillator.disconnect();
-                isPlaying = false;
+                // Smooth fade-out
+                gainNode.gain.setValueAtTime(1, context.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0, context.currentTime + 0.01); // Short fade-out
+
+                // Stop oscillator after fade-out
+                setTimeout(() => {
+                    oscillator.stop();
+                    oscillator.disconnect();
+                    isPlaying = false;
+                }, 20); // Wait for fade-out to complete
             }
         }
 
-        button.addEventListener('mousedown', startTone);
-        button.addEventListener('mouseup', stopTone);
-        button.addEventListener('mouseleave', stopTone);
+        button.addEventListener('mousedown', () => {
+            startTone();
+            button.classList.add('active');  // Add the active class
+        });
+        
+        button.addEventListener('mouseup', () => {
+            stopTone();
+            button.classList.remove('active');  // Remove the active class
+        });
+
+        button.addEventListener('mouseleave', () => {
+            stopTone();
+            button.classList.remove('active');  // Remove the active class if mouse leaves the button
+        });
 
         // For touch devices
         button.addEventListener('touchstart', (e) => {
             e.preventDefault();
             startTone();
+            button.classList.add('active');  // Add the active class
         });
 
         button.addEventListener('touchend', (e) => {
             e.preventDefault();
             stopTone();
+            button.classList.remove('active');  // Remove the active class
         });
 
         // Handle spacebar press
@@ -92,7 +124,7 @@
             if (e.code === 'Space') {
                 e.preventDefault();
                 startTone();
-                button.classList.add('active'); // Optional: visually indicate button press
+                button.classList.add('active');  // Add the active class
             }
         });
 
@@ -100,7 +132,7 @@
             if (e.code === 'Space') {
                 e.preventDefault();
                 stopTone();
-                button.classList.remove('active'); // Optional: visually indicate button release
+                button.classList.remove('active');  // Remove the active class
             }
         });
     </script>
